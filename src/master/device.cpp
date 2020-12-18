@@ -770,4 +770,246 @@ void Device::send_consumer_heartbeat(uint8_t node_id,
 
 void Device::stop_send_consumer_heartbeat() { stop_request_heartbeat(); }
 
-}  // end namespace kaco
+std::pair<uint16_t, uint16_t> Device::get_tpdo_indexes(kaco::TPDO_NO tpdo_no) {
+  uint16_t comm_param_idx;
+  uint16_t mapp_param_idx;
+
+  switch (tpdo_no)
+  {
+  case kaco::TPDO_NO::TPDO_1:
+    comm_param_idx = 0x1800;
+    mapp_param_idx = 0x1A00;
+    break;
+  case kaco::TPDO_NO::TPDO_2:
+    comm_param_idx = 0x1801;
+    mapp_param_idx = 0x1A01;
+    break;
+  case kaco::TPDO_NO::TPDO_3:
+    comm_param_idx = 0x1802;
+    mapp_param_idx = 0x1A02;
+    break;
+  case kaco::TPDO_NO::TPDO_4:
+    comm_param_idx = 0x1803;
+    mapp_param_idx = 0x1A03;
+    break;
+  default:
+    throw canopen_error(
+        "[Device::get_tpdo_indexes] Invalide pdo_no");
+  }
+
+  return {comm_param_idx, mapp_param_idx};
+}
+
+std::pair<uint16_t, uint16_t> Device::get_rpdo_indexes(kaco::RPDO_NO rpdo_no) {
+  uint16_t comm_param_idx;
+  uint16_t mapp_param_idx;
+
+  switch (rpdo_no)
+  {
+  case kaco::RPDO_NO::RPDO_1:
+    comm_param_idx = 0x1400;
+    mapp_param_idx = 0x1600;
+    break;
+  case kaco::RPDO_NO::RPDO_2:
+    comm_param_idx = 0x1401;
+    mapp_param_idx = 0x1601;
+    break;
+  case kaco::RPDO_NO::RPDO_3:
+    comm_param_idx = 0x1402;
+    mapp_param_idx = 0x1602;
+    break;
+  case kaco::RPDO_NO::RPDO_4:
+    comm_param_idx = 0x1403;
+    mapp_param_idx = 0x1603;
+    break;
+  default:
+    throw canopen_error(
+        "[Device::get_tpdo_indexes] Invalide pdo_no");
+  }
+
+  return {comm_param_idx, mapp_param_idx};
+}
+
+void Device::write_entry(uint16_t index, std::vector<uint32_t> entries) {
+  uint8_t offset = 0;
+  for (uint8_t i = 0; i < entries.size(); i++) {
+    offset++;
+    set_entry(index, offset, static_cast<uint32_t>(entries.at(i)),
+                      kaco::WriteAccessMethod::sdo);
+  }
+}
+
+void Device::map_tpdo_in_device(kaco::TPDO_NO tpdo_no,
+                        std::vector<uint32_t> entries_to_be_mapped,
+                        uint8_t transmit_type, uint16_t inhibit_time,
+                        uint16_t event_timer)
+{
+  auto tmp_idxs = get_tpdo_indexes(tpdo_no);
+
+  uint16_t comm_param_idx = tmp_idxs.first;
+  uint16_t mapp_param_idx = tmp_idxs.second;
+
+  // disable tpdo
+  uint32_t cob_id = 0;
+  cob_id = get_entry(comm_param_idx, static_cast<uint8_t>(0x01),
+                             kaco::ReadAccessMethod::sdo);
+  cob_id ^= static_cast<uint32_t>((-1 ^ cob_id) & (1UL << 31));
+  set_entry(comm_param_idx, 0x01, static_cast<uint32_t>(cob_id),
+                    kaco::WriteAccessMethod::sdo);
+
+  // delete no. of mapped entries
+  set_entry(mapp_param_idx, 0x00, static_cast<uint8_t>(0x00),
+                    kaco::WriteAccessMethod::sdo);
+                    
+  // add new mapping
+  write_entry(mapp_param_idx, entries_to_be_mapped);
+
+  // update no. of mapped entries
+  set_entry(mapp_param_idx, static_cast<uint8_t>(0x00),
+                    static_cast<uint8_t>(entries_to_be_mapped.size()),
+                    kaco::WriteAccessMethod::sdo);
+
+  // set transmit type
+  set_entry(comm_param_idx, static_cast<uint8_t>(0x02), transmit_type,
+                    kaco::WriteAccessMethod::sdo);
+
+  // set inhibit time
+  set_entry(comm_param_idx, static_cast<uint8_t>(0x03), inhibit_time,
+                    kaco::WriteAccessMethod::sdo);
+                    
+  // set event timer i.e transmit frequency
+  set_entry(comm_param_idx, static_cast<uint8_t>(0x05), event_timer,
+                    kaco::WriteAccessMethod::sdo);
+
+  // enable tpdo
+  cob_id ^= static_cast<uint32_t>((0 ^ cob_id) & (1UL << 31));
+  set_entry(comm_param_idx, static_cast<uint8_t>(0x01),
+                    static_cast<uint32_t>(cob_id),
+                    kaco::WriteAccessMethod::sdo);
+}
+
+void Device::map_tpdo_in_device(kaco::TPDO_NO tpdo_no,
+                        std::vector<uint32_t> entries_to_be_mapped,
+                        uint8_t transmit_type, uint16_t inhibit_time) {
+  auto tmp_idxs = get_tpdo_indexes(tpdo_no);
+
+  uint16_t comm_param_idx = tmp_idxs.first;
+  uint16_t mapp_param_idx = tmp_idxs.second;
+
+  // disable tpdo
+  uint32_t cob_id = 0;
+  cob_id = get_entry(comm_param_idx, static_cast<uint8_t>(0x01),
+                             kaco::ReadAccessMethod::sdo);
+  cob_id ^= static_cast<uint32_t>((-1 ^ cob_id) & (1UL << 31));
+  set_entry(comm_param_idx, 0x01, static_cast<uint32_t>(cob_id),
+                    kaco::WriteAccessMethod::sdo);
+
+  // delete no. of mapped entries
+  set_entry(mapp_param_idx, 0x00, static_cast<uint8_t>(0x00),
+                    kaco::WriteAccessMethod::sdo);
+                    
+  // add new mapping
+  write_entry(mapp_param_idx, entries_to_be_mapped);
+
+  // update no. of mapped entries
+  set_entry(mapp_param_idx, static_cast<uint8_t>(0x00),
+                    static_cast<uint8_t>(entries_to_be_mapped.size()),
+                    kaco::WriteAccessMethod::sdo);
+
+  // set transmit type
+  set_entry(comm_param_idx, static_cast<uint8_t>(0x02), transmit_type,
+                    kaco::WriteAccessMethod::sdo);
+
+  // set inhibit time
+  set_entry(comm_param_idx, static_cast<uint8_t>(0x03), inhibit_time,
+                    kaco::WriteAccessMethod::sdo);
+                    
+  // enable tpdo
+  cob_id ^= static_cast<uint32_t>((0 ^ cob_id) & (1UL << 31));
+  set_entry(comm_param_idx, static_cast<uint8_t>(0x01),
+                    static_cast<uint32_t>(cob_id),
+                    kaco::WriteAccessMethod::sdo);
+}
+
+void Device::map_tpdo_in_device(TPDO_NO tpdo_no,
+                        std::vector<uint32_t> entries_to_be_mapped,
+                        uint8_t transmit_type) {
+  auto tmp_idxs = get_tpdo_indexes(tpdo_no);
+
+  uint16_t comm_param_idx = tmp_idxs.first;
+  uint16_t mapp_param_idx = tmp_idxs.second;
+
+  // disable tpdo
+  uint32_t cob_id = 0;
+  cob_id = get_entry(comm_param_idx, static_cast<uint8_t>(0x01),
+                             kaco::ReadAccessMethod::sdo);
+  cob_id ^= static_cast<uint32_t>((-1 ^ cob_id) & (1UL << 31));
+  set_entry(comm_param_idx, 0x01, static_cast<uint32_t>(cob_id),
+                    kaco::WriteAccessMethod::sdo);
+
+  // delete no. of mapped entries
+  set_entry(mapp_param_idx, 0x00, static_cast<uint8_t>(0x00),
+                    kaco::WriteAccessMethod::sdo);
+                    
+  // add new mapping
+  write_entry(mapp_param_idx, entries_to_be_mapped);
+
+  // update no. of mapped entries
+  set_entry(mapp_param_idx, static_cast<uint8_t>(0x00),
+                    static_cast<uint8_t>(entries_to_be_mapped.size()),
+                    kaco::WriteAccessMethod::sdo);
+
+  // set transmit type
+  set_entry(comm_param_idx, static_cast<uint8_t>(0x02), transmit_type,
+                    kaco::WriteAccessMethod::sdo);
+
+  // enable tpdo
+  cob_id ^= static_cast<uint32_t>((0 ^ cob_id) & (1UL << 31));
+  set_entry(comm_param_idx, static_cast<uint8_t>(0x01),
+                    static_cast<uint32_t>(cob_id),
+                    kaco::WriteAccessMethod::sdo);
+}
+
+void Device::map_rpdo_in_device(kaco::RPDO_NO rpdo_no,
+                                std::vector<uint32_t> entries_to_be_mapped,
+                                uint8_t transmit_type)
+{
+  auto tmp_idxs = get_rpdo_indexes(rpdo_no);
+
+  uint16_t comm_param_idx = tmp_idxs.first;
+  uint16_t mapp_param_idx = tmp_idxs.second;
+
+  // disable rpdo1
+  uint32_t cob_id = 0;
+  cob_id = get_entry(comm_param_idx, static_cast<uint8_t>(0x01),
+                             kaco::ReadAccessMethod::sdo);
+  cob_id ^= static_cast<uint32_t>((-1 ^ cob_id) & (1UL << 31));
+  set_entry(comm_param_idx, static_cast<uint8_t>(0x01),
+                    static_cast<uint32_t>(cob_id),
+                    kaco::WriteAccessMethod::sdo);
+
+  // delete no. of mapped entries
+  set_entry(mapp_param_idx, static_cast<uint8_t>(0x00),
+                    static_cast<uint8_t>(0x00),
+                    kaco::WriteAccessMethod::sdo);
+
+  // add new mapping
+  write_entry(mapp_param_idx, entries_to_be_mapped);
+
+  // update no. of mapped entries (enable PDO)
+  set_entry(mapp_param_idx, static_cast<uint8_t>(0x00),
+                    static_cast<uint8_t>(entries_to_be_mapped.size()),
+                    kaco::WriteAccessMethod::sdo);
+
+  // set transmit type
+  set_entry(comm_param_idx, static_cast<uint8_t>(0x02), transmit_type,
+                    kaco::WriteAccessMethod::sdo);
+
+  // enable rpdo1
+  cob_id ^= static_cast<uint32_t>((0 ^ cob_id) & (1UL << 31));
+  set_entry(comm_param_idx, static_cast<uint8_t>(0x01),
+                    static_cast<uint32_t>(cob_id),
+                    kaco::WriteAccessMethod::sdo);
+}
+
+} // end namespace kaco

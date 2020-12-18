@@ -46,6 +46,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <utility>
 
 namespace kaco {
 
@@ -314,6 +315,27 @@ class Device {
   /// example be printed via print_dictionary().
   void read_complete_dictionary();
 
+  void enable_tpdo_in_device(kaco::TPDO_NO tpdo_no);
+
+  void enable_rpdo_in_device(kaco::RPDO_NO rpdo_no);
+
+  void map_tpdo_in_device(kaco::TPDO_NO tpdo_no,
+                          std::vector<uint32_t> entries_to_be_mapped,
+                          uint8_t transmit_type, uint16_t inhibit_time,
+                          uint16_t event_timer);
+
+  void map_tpdo_in_device(kaco::TPDO_NO tpdo_no,
+                          std::vector<uint32_t> entries_to_be_mapped,
+                          uint8_t transmit_type, uint16_t inhibit_time);
+
+  void map_tpdo_in_device(kaco::TPDO_NO tpdo_no,
+                        std::vector<uint32_t> entries_to_be_mapped,
+                        uint8_t transmit_type);
+                    
+  void map_rpdo_in_device(kaco::RPDO_NO rpdo_no,
+                        std::vector<uint32_t> entries_to_be_mapped,
+                        uint8_t transmit_type);
+
   /// Creates a separate transmit thread to send heartbeat request or consumer
   /// heartbeat to the slave
   void request_heartbeat(uint8_t node_id, uint16_t heartbeat_interval,
@@ -352,6 +374,12 @@ class Device {
   void set_entry_via_sdo(uint32_t index, uint8_t subindex, const Value& value);
 
   ///@}
+ 
+  std::pair<uint16_t, uint16_t> get_tpdo_indexes(kaco::TPDO_NO tpdo_no);
+
+  std::pair<uint16_t, uint16_t> get_rpdo_indexes(kaco::RPDO_NO rpdo_no);
+
+  void write_entry(uint16_t index, std::vector<uint32_t> entries);
 
   /// Loads most specific CiA standard profile.
   void load_cia_dictionary();

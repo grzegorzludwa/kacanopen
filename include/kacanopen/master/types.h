@@ -110,4 +110,18 @@ enum AccessType { read_only, write_only, read_write, constant };
 /// Transmission type of a PDO mapping
 enum class TransmissionType { PERIODIC, ON_CHANGE };
 
+enum class TPDO_NO {
+  TPDO_1 = 0,
+  TPDO_2 = 1,
+  TPDO_3 = 2,
+  TPDO_4 = 3
+};
+
+enum class RPDO_NO {
+  RPDO_1 = 0,
+  RPDO_2 = 1,
+  RPDO_3 = 2,
+  RPDO_4 = 3
+};
+
 }  // end namespace kaco
