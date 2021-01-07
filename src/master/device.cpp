@@ -57,16 +57,16 @@ Device::~Device() {
 }
 
 void Device::start() {
-  load_operations();
-  load_constants();
+  m_core.nmt.send_nmt_message(m_node_id, NMT::Command::start_node);
 
   // NOTE: Loading these files SOMETIMES causes a inbalance between m_dictionary
   // and m_name_to_address which causes segfaults when parsing messages at
   // runtime
 
-  // load_default_eds_files();
+  load_default_eds_files();
 
-  m_core.nmt.send_nmt_message(m_node_id, NMT::Command::start_node);
+  load_operations();
+  load_constants();
 }
 
 uint8_t Device::get_node_id() const { return m_node_id; }

@@ -218,5 +218,12 @@
 			"Identity object/Vendor-ID": 251,
 			"Identity object/Product code": 1663172608
 		}
+	},
+	{
+		"file": "Technosoft/iPOS.D.v1.04_pdo_mapped.eds",
+		"match": {
+			"Identity object/Vendor-ID": 419,
+			"Identity object/Product code": 27214201 
+		}
 	}
 ]
