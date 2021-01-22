@@ -379,7 +379,7 @@ class Device {
 
   std::pair<uint16_t, uint16_t> get_rpdo_indexes(kaco::RPDO_NO rpdo_no);
 
-  void write_entry(uint16_t index, std::vector<uint32_t> entries);
+  void write_entries(uint16_t index, std::vector<uint32_t> entries);
 
   /// Loads most specific CiA standard profile.
   void load_cia_dictionary();

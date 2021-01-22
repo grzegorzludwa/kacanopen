@@ -426,7 +426,7 @@ void Device::pdo_received_callback(const ReceivePDOMapping& mapping,
 
   if (entry.type == Type::invalid) {
     ERROR("[Device::pdo_received_callback] Entry '" + entry_name +
-          "' fetched from m_dicctionary is invalid");
+          "' fetched from m_dictionary is invalid");
     return;
   }
 
@@ -830,7 +830,7 @@ std::pair<uint16_t, uint16_t> Device::get_rpdo_indexes(kaco::RPDO_NO rpdo_no) {
   return {comm_param_idx, mapp_param_idx};
 }
 
-void Device::write_entry(uint16_t index, std::vector<uint32_t> entries) {
+void Device::write_entries(uint16_t index, std::vector<uint32_t> entries) {
   uint8_t offset = 0;
   for (uint8_t i = 0; i < entries.size(); i++) {
     offset++;
@@ -862,7 +862,7 @@ void Device::map_tpdo_in_device(kaco::TPDO_NO tpdo_no,
                     kaco::WriteAccessMethod::sdo);
                     
   // add new mapping
-  write_entry(mapp_param_idx, entries_to_be_mapped);
+  write_entries(mapp_param_idx, entries_to_be_mapped);
 
   // update no. of mapped entries
   set_entry(mapp_param_idx, static_cast<uint8_t>(0x00),
@@ -909,7 +909,7 @@ void Device::map_tpdo_in_device(kaco::TPDO_NO tpdo_no,
                     kaco::WriteAccessMethod::sdo);
                     
   // add new mapping
-  write_entry(mapp_param_idx, entries_to_be_mapped);
+  write_entries(mapp_param_idx, entries_to_be_mapped);
 
   // update no. of mapped entries
   set_entry(mapp_param_idx, static_cast<uint8_t>(0x00),
@@ -952,7 +952,7 @@ void Device::map_tpdo_in_device(TPDO_NO tpdo_no,
                     kaco::WriteAccessMethod::sdo);
                     
   // add new mapping
-  write_entry(mapp_param_idx, entries_to_be_mapped);
+  write_entries(mapp_param_idx, entries_to_be_mapped);
 
   // update no. of mapped entries
   set_entry(mapp_param_idx, static_cast<uint8_t>(0x00),
@@ -994,7 +994,7 @@ void Device::map_rpdo_in_device(kaco::RPDO_NO rpdo_no,
                     kaco::WriteAccessMethod::sdo);
 
   // add new mapping
-  write_entry(mapp_param_idx, entries_to_be_mapped);
+  write_entries(mapp_param_idx, entries_to_be_mapped);
 
   // update no. of mapped entries (enable PDO)
   set_entry(mapp_param_idx, static_cast<uint8_t>(0x00),
