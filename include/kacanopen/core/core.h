@@ -101,7 +101,7 @@ class Core {
 
   /// Sends a message
   /// \remark thread-safe if m_lock_send==true or driver is thread-safe.
-  void send(const Message& message);
+  bool send(const Message& message);
 
   /// Registers a callback function which is called when a message has been
   /// received. \remark thread-safe

@@ -86,6 +86,15 @@ bool Core::start(const std::string busname, const std::string& baudrate) {
     return false;
   }
 
+  uint16_t cob_id = 0x700 + 6;
+  const Message message = {cob_id, true, 0, {0, 0, 0, 0, 0, 0, 0, 0}};
+  bool send_res = send(message);
+
+  if (!send_res) {
+    ERROR("Cannot send dummy message. Probably network is down");
+    return false;
+  }
+
   m_running = true;
   m_loop_thread = std::thread(&Core::receive_loop, this, std::ref(m_running));
   return true;
@@ -222,18 +231,20 @@ void Core::received_message(const Message& message) {
   DEBUG_LOG(" ");
 }
 
-void Core::send(const Message& message) {
+bool Core::send(const Message& message) {
   if (m_lock_send) {
     m_send_mutex.lock();
   }
 
   DEBUG_LOG_EXHAUSTIVE("Sending message:");
   DEBUG_EXHAUSTIVE(message.print();)
-  canSend_driver(m_handle, &message);
+  uint8_t res = canSend_driver(m_handle, &message);
 
   if (m_lock_send) {
     m_send_mutex.unlock();
   }
+
+  return res == 0;
 }
 
 }  // namespace kaco
