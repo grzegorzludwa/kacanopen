@@ -220,10 +220,9 @@
 		}
 	},
 	{
-		"file": "Technosoft/iPOS.D.v1.04_pdo_mapped.eds",
+		"file": "Technosoft/iPOS.D.v1.04.eds",
 		"match": {
-			"Identity object/Vendor-ID": 419,
-			"Identity object/Product code": 27214201 
+			"Identity object/Vendor-ID": 419
 		}
 	}
 ]
