@@ -315,10 +315,6 @@ class Device {
   /// example be printed via print_dictionary().
   void read_complete_dictionary();
 
-  void enable_tpdo_in_device(kaco::TPDO_NO tpdo_no);
-
-  void enable_rpdo_in_device(kaco::RPDO_NO rpdo_no);
-
   void map_tpdo_in_device(kaco::TPDO_NO tpdo_no,
                           std::vector<uint32_t> entries_to_be_mapped,
                           uint8_t transmit_type, uint16_t inhibit_time,
