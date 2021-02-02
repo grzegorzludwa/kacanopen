@@ -35,6 +35,8 @@ namespace kaco {
 
 size_t Config::sdo_response_timeout_ms = 2000;
 
+size_t Config::nmt_check_alive_interval_ms = 1500;
+
 size_t Config::consecutive_send_pause_ms = 2;
 
 size_t Config::repeats_on_sdo_timeout = 0;

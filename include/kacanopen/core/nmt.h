@@ -40,6 +40,7 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+#include <atomic>
 
 namespace kaco {
 
@@ -127,6 +128,8 @@ class NMT {
   void check_alive_devices();
   void register_device_dead_callback(const DeviceAliveCallback& callback);
 
+  void change_alive_check_interval(size_t interval);
+  
  private:
   static const bool debug = false;
   Core& m_core;
@@ -141,6 +144,7 @@ class NMT {
       m_callback_futures;  // forward_list because of remove_if
   mutable std::mutex m_callback_futures_mutex;
 
+  std::atomic<size_t> alive_check_interval_;
   std::unordered_map<size_t, DeviceState> alive_devices_;
   bool thread_alive_;
   std::thread alive_devices_thread_;

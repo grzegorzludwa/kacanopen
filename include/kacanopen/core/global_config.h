@@ -41,6 +41,9 @@ class Config {
   /// Timeout in milliseconds when waiting for an SDO response.
   static size_t sdo_response_timeout_ms;
 
+  /// Timeout in milliseconds when waiting alive signal from device.
+  static size_t nmt_check_alive_interval_ms;
+
   /// Pause between two consecutively sent CAN frames in milliseconds.
   static size_t consecutive_send_pause_ms;
 
