@@ -46,6 +46,11 @@ namespace kaco {
 /// This class is a bridge between a ROS network and a CanOpen network.
 class Bridge {
  public:
+
+  Bridge();
+
+  ~Bridge();
+
   /// Runs the ROS spinner and blocks until shutdown (e.g. via Ctrl+c).
   void run();
 
@@ -62,9 +67,11 @@ class Bridge {
   ///   to a subscriber may never change after advertising it to ROS.
   void add_subscriber(std::shared_ptr<Subscriber> subscriber);
 
+
  private:
   static const bool debug = false;
 
+  volatile std::atomic<bool> m_running;
   std::vector<std::shared_ptr<Publisher>> m_publishers;
   std::vector<std::shared_ptr<Subscriber>> m_subscribers;
   std::forward_list<std::future<void>> m_futures;

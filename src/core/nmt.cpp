@@ -44,7 +44,8 @@ namespace kaco {
 NMT::NMT(Core& core)
     : m_core(core),
       thread_alive_(true),
-      alive_devices_thread_(&NMT::check_alive_devices, this) {}
+      alive_devices_thread_(&NMT::check_alive_devices, this),
+      alive_check_interval_(kaco::Config::nmt_check_alive_interval_ms) {}
 
 NMT::~NMT() {
   thread_alive_ = false;
@@ -53,7 +54,7 @@ NMT::~NMT() {
 
 void NMT::send_nmt_message(uint8_t node_id, Command cmd) {
   DEBUG_LOG("Set NMT state of " << (unsigned)node_id << " to "
-                                << static_cast<uint32_t>(cmd));
+                                << std::hex << static_cast<uint32_t>(cmd));
   const Message message = {
       0x0000, false, 2, {static_cast<uint8_t>(cmd), node_id, 0, 0, 0, 0, 0, 0}};
   m_core.send(message);
@@ -103,20 +104,34 @@ void NMT::process_incoming_message(const Message& message) {
   // DEBUG_DUMP(toggle_bit);
 
   switch (state) {
-    case 0:
-    case 2:
-    case 3:
-    case 5:
+    case 0: {
+      uint16_t cob_id = 0x700 + message.get_node_id();
+      const Message message = {cob_id, true, 0, {0, 0, 0, 0, 0, 0, 0, 0}};
+      m_core.send(message);
+      break;
+    }
+    case 5: {
       // If the device is in our map, we set it to true
-      if (alive_devices_.find(message.get_node_id()) != alive_devices_.end())
+      if (alive_devices_.find(message.get_node_id()) != alive_devices_.end()) {
         alive_devices_[message.get_node_id()] = DeviceState::ALIVE;
-
+        DEBUG_LOG("Set device with id: " << message.get_node_id()
+                                         << " ALIVE state");
+      }
+      // If the device is not in our map but its state is operational
+      // it means, that core was reseted. As we don't know current device
+      // config, send RESET_NODE command
+      else {
+        send_nmt_message(message.get_node_id(), Command::reset_node);
+        DEBUG_LOG("Reseted node: " << message.get_node_id());
+      }
+      break;
+    }
     case 127: {
       // device is alive
       // cleaning up old futures
       if (m_cleanup_futures) {
         std::lock_guard<std::mutex> scoped_lock(m_callback_futures_mutex);
-        m_callback_futures.remove_if([](const std::future<void>& f) {
+        m_callback_futures.remove_if([](const std::future<void> &f) {
           // return true if callback has finished it's computation.
           return (f.wait_for(std::chrono::steady_clock::duration::zero()) ==
                   std::future_status::ready);
@@ -125,8 +140,9 @@ void NMT::process_incoming_message(const Message& message) {
       // TODO: this should be device_alive callback
       {
         std::lock_guard<std::mutex> scoped_lock(m_device_alive_callbacks_mutex);
-        for (const auto& callback : m_device_alive_callbacks) {
-          DEBUG_LOG("Calling new device callback (async)");
+        for (const auto &callback : m_device_alive_callbacks) {
+          DEBUG_LOG("Calling new device id: " << message.get_node_id()
+                                              << " callback (async)");
           // The future returned by std::async has to be stored,
           // otherwise the immediately called future destructor
           // blocks until callback has finished.
@@ -197,16 +213,25 @@ void NMT::register_new_device_callback(const NewDeviceCallback& callback) {
   register_device_alive_callback(callback);
 }
 
+void NMT::change_alive_check_interval(size_t interval)
+{
+  alive_check_interval_ = interval;
+}
+
 void NMT::check_alive_devices() {
   while (thread_alive_) {
     // Set all devices to be killed
-    for (auto& device : alive_devices_)
-      device.second = DeviceState::TO_BE_KILLED;
+    for (auto& device : alive_devices_) {
+      if (device.second == DeviceState::ALIVE) {
+        device.second = DeviceState::TO_BE_KILLED;
+      }
+    }
 
     // Sleep for some time
-    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(alive_check_interval_));
 
     // Check if they are alive
+    DEBUG_LOG("Size of alive_devices_: " << alive_devices_.size());
     for (auto& device : alive_devices_) {
       if (device.second == DeviceState::TO_BE_KILLED) {
         // Call dead callbacks

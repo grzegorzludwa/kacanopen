@@ -51,6 +51,11 @@ EntrySubscriber::EntrySubscriber(Device& device, const std::string& entry_name,
   m_type = device.get_entry_type(entry_name);
 }
 
+EntrySubscriber::~EntrySubscriber()
+{
+  m_subscriber.shutdown();
+}
+
 void EntrySubscriber::advertise() {
   std::string topic = m_device_prefix + "set_" + m_name;
   DEBUG_LOG("Advertising " << topic);

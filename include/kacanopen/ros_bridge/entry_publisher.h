@@ -53,6 +53,8 @@ class EntryPublisher : public Publisher {
       Device& device, const std::string& entry_name,
       const ReadAccessMethod access_method = ReadAccessMethod::use_default);
 
+  ~EntryPublisher();
+
   /// \see interface Publisher
   void advertise() override;
 
