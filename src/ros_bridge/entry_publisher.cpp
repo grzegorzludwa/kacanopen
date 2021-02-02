@@ -60,6 +60,11 @@ EntryPublisher::EntryPublisher(Device& device, const std::string& entry_name,
   m_type = device.get_entry_type(entry_name);
 }
 
+EntryPublisher::~EntryPublisher()
+{
+  m_publisher.shutdown();
+}
+
 void EntryPublisher::advertise() {
   std::string topic = m_device_prefix + "get_" + m_name;
   DEBUG_LOG("Advertising " << topic);
