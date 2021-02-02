@@ -38,6 +38,18 @@
 
 namespace kaco {
 
+Bridge::Bridge() : m_running(true) { }
+
+Bridge::~Bridge() { 
+  m_running = false;
+  // wait for publisher loops to finish
+  m_futures.remove_if([](const std::future<void> &f) {
+    // return true if publisher has finished
+    return (f.wait_for(std::chrono::steady_clock::duration::zero()) ==
+            std::future_status::ready);
+  });
+}
+
 void Bridge::add_publisher(std::shared_ptr<Publisher> publisher,
                            double loop_rate) {
   m_publishers.push_back(publisher);
@@ -45,7 +57,7 @@ void Bridge::add_publisher(std::shared_ptr<Publisher> publisher,
   m_futures.push_front(
       std::async(std::launch::async, [publisher, loop_rate, this]() {
         ros::Rate rate(loop_rate);
-        while (ros::ok()) {
+        while (ros::ok() && m_running) {
           publisher->publish();
           rate.sleep();
         }
