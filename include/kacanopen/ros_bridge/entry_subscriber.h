@@ -63,6 +63,8 @@ class EntrySubscriber : public Subscriber {
       Device& device, const std::string& entry_name,
       const WriteAccessMethod access_method = WriteAccessMethod::use_default);
 
+  ~EntrySubscriber();
+
   /// \see interface Subscriber
   void advertise() override;
 
